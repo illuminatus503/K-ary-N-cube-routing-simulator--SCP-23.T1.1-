@@ -84,6 +84,7 @@ void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
 {
     long coord_value, coord_index;
     unsigned long distance, reg_length = cube->last_reg->length;
+    unsigned int n_steps_taken;
 
     Vertex *u_clone;
 
@@ -116,7 +117,9 @@ void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
     clone_vertex(cube->g->vertices[u_index], u_clone);
 
     // Visualise the origin.
-    printf("( INDEX = %ld ) Step taken = [ ", u_clone->index);
+    n_steps_taken = 0;
+    printf(" ** PATH TAKEN (from the begining to the end) ** \n\n");
+    printf("( INDEX = %ld ) Step %d taken = [ ", u_clone->index, n_steps_taken++);
     for (int i = 0; i < reg_length; i++)
         printf("%ld ", u_clone->coordinates[i]);
     printf("]\n");
@@ -138,7 +141,7 @@ void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
             {
                 u_clone->coordinates[coord_index] = (u_clone->coordinates[coord_index] - 1) % cube->k;
                 if (u_clone->coordinates[coord_index] < 0) // For torus, equivalent coordinate in arithmetic
-                                                           // Modulo K
+                                                           // Modulo K by summing the period k to the neg. num.
                 {
                     u_clone->coordinates[coord_index] += cube->k;
                 }
@@ -147,7 +150,7 @@ void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
             }
 
             // Print on screen the next step taken
-            printf("( INDEX = %ld ) Step taken = [ ", decode_coordinates(u_clone, cube->k));
+            printf("( INDEX = %ld ) Step %d taken = [ ", decode_coordinates(u_clone, cube->k), n_steps_taken++);
             for (int i = 0; i < reg_length; i++)
                 printf("%ld ", u_clone->coordinates[i]);
             printf("]\n");
