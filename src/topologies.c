@@ -38,7 +38,7 @@ void define_kary_ncube(k_ary_n_cube *cube)
     /* Allocate memory for the structure */
     cube->n = n_dims;
     cube->k = k;
-    cube->g = (Graph *)malloc(sizeof(Graph));
+    cube->g = (PartialGraph *)malloc(sizeof(PartialGraph));
     define_graph(cube->g, n_vertex, n_dims);
 
     /* Allocate memory for the register */

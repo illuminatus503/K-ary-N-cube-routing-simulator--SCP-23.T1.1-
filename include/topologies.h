@@ -34,7 +34,7 @@ void free_routing_reg(RoutingReg **reg);
 /* K-ary N-cube structure */
 struct k_ary_n_cube
 {
-    Graph *g;
+    PartialGraph *g;
     bool has_rings;
     long n, k;
     RoutingReg *last_reg;

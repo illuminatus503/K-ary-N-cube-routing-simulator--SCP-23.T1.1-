@@ -45,7 +45,7 @@ void clone_vertex(Vertex *v, Vertex *u)
     }
 }
 
-void print_vertex(Graph *g, unsigned long u_index)
+void print_vertex(PartialGraph *g, unsigned long u_index)
 {
     int coord_index;
     Vertex *v = g->vertices[u_index];
@@ -58,18 +58,18 @@ void print_vertex(Graph *g, unsigned long u_index)
     printf("]");
 }
 
-/*! GRAPH STRUCTURE -- INIT !*/
+/*! PartialGraph STRUCTURE -- INIT !*/
 
 /**
- * @brief Initialise a Graph structure.
+ * @brief Initialise a PartialGraph structure.
  * Define the number of vertex and the adjacency matrix.
  *
- * @param g The graph structure to be initialised.
- * @param n_vertex The number of vertex of the graph.
- * @param n_dims The number of dimensions in which the graph
+ * @param g The PartialGraph structure to be initialised.
+ * @param n_vertex The number of vertex of the PartialGraph.
+ * @param n_dims The number of dimensions in which the PartialGraph
  * will be defined.
  */
-void define_graph(Graph *g, unsigned long n_vertex, unsigned long n_dims)
+void define_graph(PartialGraph *g, unsigned long n_vertex, unsigned long n_dims)
 {
     unsigned long vertex_index;
 
@@ -79,31 +79,26 @@ void define_graph(Graph *g, unsigned long n_vertex, unsigned long n_dims)
     // Allocate mem. for a vertex array.
     // Allocate mem. and init. to 0 the adjacency matrix.
     g->vertices = (Vertex **)malloc(n_vertex * sizeof(Vertex *));
-    g->edges = (unsigned long **)malloc(n_vertex * sizeof(unsigned long *));
     for (vertex_index = 0; vertex_index < n_vertex; vertex_index++)
     {
         // Declare and init. each vertex.
         g->vertices[vertex_index] = (Vertex *)malloc(sizeof(Vertex));
         define_vertex(g->vertices[vertex_index], vertex_index, n_dims);
-
-        // Allocate mem. for the adjacency matrix.
-        g->edges[vertex_index] = (unsigned long *)calloc(n_vertex, sizeof(unsigned long));
+        ;
     }
 }
 
 /**
- * @brief Free a graph structure;
+ * @brief Free a PartialGraph structure;
  *
- * @param g A pointer to the graph structure to be freed.
+ * @param g A pointer to the PartialGraph structure to be freed.
  */
-void free_graph(Graph **g)
+void free_graph(PartialGraph **g)
 {
     for (int vertex = 0; vertex < (*g)->n_vertex; vertex++)
     {
-        free((*g)->edges[vertex]);
         free_vertex(&((*g)->vertices[vertex]));
     }
     free((*g)->vertices);
-    free((*g)->edges);
     free(*g);
 }

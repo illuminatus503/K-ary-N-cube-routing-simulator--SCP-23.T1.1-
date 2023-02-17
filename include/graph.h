@@ -32,40 +32,39 @@ void free_vertex(Vertex **v);
  */
 void clone_vertex(Vertex *v, Vertex *u);
 
-/* Graph structure */
-struct Graph
+/* PartialGraph structure */
+struct PartialGraph
 {
     int n_vertex;
     Vertex **vertices;
-    unsigned long **edges;
-} typedef Graph;
+} typedef PartialGraph;
 
 /**
- * @brief Initialise a Graph structure.
+ * @brief Initialise a PartialGraph structure.
  * Define the number of vertex and the adjacency matrix.
  *
- * @param g The graph structure to be initialised.
- * @param n_vertex The number of vertex of the graph.
- * @param n_dims The number of dimensions in which the graph
+ * @param g The PartialGraph structure to be initialised.
+ * @param n_vertex The number of vertex of the PartialGraph.
+ * @param n_dims The number of dimensions in which the PartialGraph
  * will be defined.
  */
-void define_graph(Graph *g, unsigned long n_vertex, unsigned long n_dims);
+void define_graph(PartialGraph *g, unsigned long n_vertex, unsigned long n_dims);
 
 /**
- * @brief Free a graph structure;
+ * @brief Free a PartialGraph structure;
  *
- * @param g A pointer to the graph structure to be freed.
+ * @param g A pointer to the PartialGraph structure to be freed.
  */
-void free_graph(Graph **g);
+void free_graph(PartialGraph **g);
 
 /**
  * @brief Print the index and coordinates of a vertex.
  *
  *  FORMAT: %index% [ coord., sep. by spaces ]
  *
- * @param g The graph to take the coordinates from.
- * @param u_index The index of the vertex in the graph.
+ * @param g The PartialGraph to take the coordinates from.
+ * @param u_index The index of the vertex in the PartialGraph.
  */
-void print_vertex(Graph *g, unsigned long u_index);
+void print_vertex(PartialGraph *g, unsigned long u_index);
 
 #endif
