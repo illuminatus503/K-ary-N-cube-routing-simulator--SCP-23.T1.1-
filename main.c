@@ -237,7 +237,7 @@ void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 void encode_coordinates(k_ary_n_cube *cube)
 {
     int index, vertex_index;
-    unsigned char rest;
+    unsigned long rest;
     
     Vertex *v;
     Vertex ** vertices = cube->g->vertices;
@@ -263,29 +263,29 @@ void encode_coordinates(k_ary_n_cube *cube)
         }
     }
 
-    // TODO: solve coordinate bug
-    // Print some vertex
-    printf("2 \% 16 = %d\n", 2 % 16);
-    v = vertices[751];
+    // Coordinate bug: due to unsigned char rest overflow.
+    // Sol.: allocate more space --> unsigned long rest.
+    // v = vertices[751];
 
     // So, we will use binary decomposition.
-    index = n_dims-1;
-    rest = 751;
-    while ((index >= 0) && (rest >= 0))
-    {
-        // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
-        printf("%d ", rest % k);
-        rest /= k;
-        index--;
-    }
-    printf("\n");
+    // index = n_dims-1;
+    // rest = 751;
+    // printf("vertex=%d\n", rest);
+    // while ((index >= 0) && (rest >= 0))
+    // {
+    // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
+    //     printf("k = %ld; (rest//k = (%ld, %ld) (index = %d)\n", k, rest / k, rest % k, index);
+    //     rest = rest / k;
+    //     index--;
+    // }
+    // printf("\n");
 
-    printf("Saved = \n");
-    for (int j = 0; j < n_dims; j++)
-    {
-        printf("%ld ", v->coordinates[j]);
-    }
-    printf("\n");
+    // printf("Saved = [ ");
+    // for (int j = 0; j < n_dims; j++)
+    // {
+    //     printf("%ld ", v->coordinates[j]);
+    // }
+    // printf("]\n");
 }
 
 /**
