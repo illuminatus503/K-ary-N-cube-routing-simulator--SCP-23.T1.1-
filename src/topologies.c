@@ -98,8 +98,14 @@ void define_kary_ncube(k_ary_n_cube *cube)
  * @param u_index The index of the source node.
  * @param v_index The index of the destination node.
  */
-void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
+void routing_from(k_ary_n_cube *cube, int u_index, int v_index)
 {
+    if (u_index * v_index <= 0)
+    {
+        fprintf(stderr, "Invalid index on routing.\n");
+        exit(errno);
+    }
+
     long coord_value, coord_index;
     unsigned long distance, reg_length = cube->last_reg->length;
     unsigned int n_steps_taken;
@@ -229,7 +235,7 @@ void free_routing_reg(RoutingReg **reg)
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
+void mesh_routing_func(k_ary_n_cube *cube, int u_index, int v_index)
 {
     if (u_index * v_index <= 0)
     {
@@ -260,7 +266,7 @@ void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
+void torus_routing_func(k_ary_n_cube *cube, int u_index, int v_index)
 {
     long reg_val;
 
@@ -308,7 +314,7 @@ void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
+void hypercube_routing_func(k_ary_n_cube *cube, int u_index, int v_index)
 {
     if (u_index * v_index <= 0)
     {

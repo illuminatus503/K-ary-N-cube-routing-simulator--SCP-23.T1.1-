@@ -4,8 +4,6 @@
 #include "graph.h"
 
 /* Boolean primitive in C */
-#define True 1
-#define False 0
 typedef unsigned char bool;
 
 /* Routing Register structure */
@@ -38,7 +36,7 @@ struct k_ary_n_cube
     bool has_rings;
     long n, k;
     RoutingReg *last_reg;
-    void (*routing_function)(struct k_ary_n_cube *, uint, uint); // The routing function
+    void (*routing_function)(struct k_ary_n_cube *, int, int); // The routing function
 } typedef k_ary_n_cube;
 
 /**
@@ -64,7 +62,7 @@ void free_kary_ncube(k_ary_n_cube **cube);
  * @param u_index The index of the source node.
  * @param v_index The index of the destination node.
  */
-void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index);
+void routing_from(k_ary_n_cube *cube, int u_index, int v_index);
 
 /**
  * @brief Routing function for n-dimensional mesh, with k-nodes per dim.
@@ -73,7 +71,7 @@ void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index);
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index);
+void mesh_routing_func(k_ary_n_cube *cube, int u_index, int v_index);
 
 /**
  * @brief Routing function for n-dimensional torus, with k-nodes per dim.
@@ -82,7 +80,7 @@ void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index);
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index);
+void torus_routing_func(k_ary_n_cube *cube, int u_index, int v_index);
 
 /**
  * @brief Routing function for n-dimensional hypercube.
@@ -91,7 +89,7 @@ void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index);
  * @param u A vertex in the cube
  * @param v Another vertex in the cube
  */
-void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index);
+void hypercube_routing_func(k_ary_n_cube *cube, int u_index, int v_index);
 
 /**
  * @brief Define a k-ary n-cube vertex coordinates.
