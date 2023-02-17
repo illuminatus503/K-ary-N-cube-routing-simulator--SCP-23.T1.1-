@@ -228,6 +228,65 @@ void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 }
 
 /**
+ * @brief Define a Hypercube, from a K-ary N-cube.
+ *
+ * @param cube The cube to be defined.
+ */
+void define_hypercube(k_ary_n_cube *cube)
+{
+    int index, vertex_index;
+    unsigned char rest;
+    
+    Vertex *v;
+    Vertex ** vertices = cube->g->vertices;
+    unsigned long n_dims = vertices[0]->n_dims;
+    unsigned long n_vertex = cube->g->n_vertex;
+
+    for (vertex_index = 0; vertex_index < n_vertex; vertex_index++)
+    {
+        // We have to convert an integer to a binary string
+        v = vertices[vertex_index];
+
+        // So, we will use binary decomposition.
+        index = n_dims-1;
+        rest = vertex_index;
+        while ((rest > 0) && index >= 0)
+        {
+            // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
+            v->coordinates[index--] = rest % 2; 
+            rest = rest / 2;
+        }
+
+        // TEST: print all coordinates.
+        // for (int j = 0; j < n_dims; j++)
+        // {
+        //     printf("%ld ", v->coordinates[j]);
+        // }
+        // printf("\n");
+    }
+}
+
+/**
+ * @brief Define a Torus, from a K-ary N-cube.
+ *
+ * @param cube The cube to be defined.
+ */
+void define_torus(k_ary_n_cube *cube)
+{
+    // TODO
+}
+
+/**
+ * @brief Define a Mesh, from a K-ary N-cube.
+ *
+ * @param cube The cube to be defined.
+ */
+void define_mesh(k_ary_n_cube *cube)
+{
+    // TODO
+}
+
+/**
  * @brief Define a k-ary n-cube graph.
  *  - Number of nodes: n^k (k nodes per dimension --n dims.--)
  *  - Digraph (Directed graph).
@@ -274,6 +333,7 @@ void define_kary_ncube(k_ary_n_cube *cube)
     {
         printf("hypercube");
         cube->routing_function = &hypercube_routing_func;
+        define_hypercube(cube);
     }
     else if (k >= 2)
     {
@@ -281,11 +341,13 @@ void define_kary_ncube(k_ary_n_cube *cube)
         {
             printf("torus");
             cube->routing_function = &torus_routing_func;
+            define_torus(cube);
         }
         else
         {
             printf("mesh");
             cube->routing_function = &mesh_routing_func;
+            define_mesh(cube);
         }
     }
     printf(": %d nodes in total\n", n_vertex);
