@@ -228,11 +228,13 @@ void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 }
 
 /**
- * @brief Define a Hypercube, from a K-ary N-cube.
- *
+ * @brief Define a k-ary n-cube vertex coordinates.
+ * Encode the coordinates of each vertex using the 
+ * features o the cube.
+ * 
  * @param cube The cube to be defined.
  */
-void define_hypercube(k_ary_n_cube *cube)
+void encode_coordinates(k_ary_n_cube *cube)
 {
     int index, vertex_index;
     unsigned char rest;
@@ -242,6 +244,8 @@ void define_hypercube(k_ary_n_cube *cube)
     unsigned long n_dims = vertices[0]->n_dims;
     unsigned long n_vertex = cube->g->n_vertex;
 
+    unsigned long k = cube->k;
+
     for (vertex_index = 0; vertex_index < n_vertex; vertex_index++)
     {
         // We have to convert an integer to a binary string
@@ -250,40 +254,38 @@ void define_hypercube(k_ary_n_cube *cube)
         // So, we will use binary decomposition.
         index = n_dims-1;
         rest = vertex_index;
-        while ((rest > 0) && index >= 0)
+        while ((index >= 0) && (rest >= 0))
         {
             // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
-            v->coordinates[index--] = rest % 2; 
-            rest = rest / 2;
+            v->coordinates[index] = rest % k; 
+            rest /= k;
+            index--;
         }
-
-        // TEST: print all coordinates.
-        // for (int j = 0; j < n_dims; j++)
-        // {
-        //     printf("%ld ", v->coordinates[j]);
-        // }
-        // printf("\n");
     }
-}
 
-/**
- * @brief Define a Torus, from a K-ary N-cube.
- *
- * @param cube The cube to be defined.
- */
-void define_torus(k_ary_n_cube *cube)
-{
-    // TODO
-}
+    // TODO: solve coordinate bug
+    // Print some vertex
+    printf("2 \% 16 = %d\n", 2 % 16);
+    v = vertices[751];
 
-/**
- * @brief Define a Mesh, from a K-ary N-cube.
- *
- * @param cube The cube to be defined.
- */
-void define_mesh(k_ary_n_cube *cube)
-{
-    // TODO
+    // So, we will use binary decomposition.
+    index = n_dims-1;
+    rest = 751;
+    while ((index >= 0) && (rest >= 0))
+    {
+        // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
+        printf("%d ", rest % k);
+        rest /= k;
+        index--;
+    }
+    printf("\n");
+
+    printf("Saved = \n");
+    for (int j = 0; j < n_dims; j++)
+    {
+        printf("%ld ", v->coordinates[j]);
+    }
+    printf("\n");
 }
 
 /**
@@ -325,6 +327,9 @@ void define_kary_ncube(k_ary_n_cube *cube)
     cube->last_reg = (RoutingReg *)malloc(sizeof(RoutingReg));
     define_routing_reg(cube->last_reg, n_dims);
 
+    // Encode the coordinates of the k-ary n-cube.
+    encode_coordinates(cube);
+
     // Decide whether it's a hypercube (k == 2 and no rings)
     // a torus (k >= 2 and has rings) or a mesh (k >= 2 and no rings).
     // Define the edges to be set and the *routing function*.
@@ -333,7 +338,6 @@ void define_kary_ncube(k_ary_n_cube *cube)
     {
         printf("hypercube");
         cube->routing_function = &hypercube_routing_func;
-        define_hypercube(cube);
     }
     else if (k >= 2)
     {
@@ -341,13 +345,11 @@ void define_kary_ncube(k_ary_n_cube *cube)
         {
             printf("torus");
             cube->routing_function = &torus_routing_func;
-            define_torus(cube);
         }
         else
         {
             printf("mesh");
             cube->routing_function = &mesh_routing_func;
-            define_mesh(cube);
         }
     }
     printf(": %d nodes in total\n", n_vertex);
