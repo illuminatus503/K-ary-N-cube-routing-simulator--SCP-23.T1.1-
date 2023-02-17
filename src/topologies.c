@@ -1,6 +1,9 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+
+extern int errno;
 
 #include "../include/topologies.h"
 
@@ -15,7 +18,7 @@
  */
 void define_kary_ncube(k_ary_n_cube *cube)
 {
-    unsigned long n_dims, k, n_vertex;
+    long n_dims, k, n_vertex;
     bool has_rings;
 
     unsigned char scanf_buffer; // Output of scanf, to be saved.
@@ -23,10 +26,20 @@ void define_kary_ncube(k_ary_n_cube *cube)
     // Define number of dimensions
     printf("n = ");
     scanf_buffer = scanf("%ld", &n_dims);
+    if (n_dims <= 0)
+    {
+        fprintf(stderr, "Error dims: %ld is not a valid dimension size.\n", n_dims);
+        exit(errno);
+    }
 
     // Define the number k
     printf("k = ");
     scanf_buffer = scanf("%ld", &k);
+    if (k < 2)
+    {
+        fprintf(stderr, "Error dims: %ld is not a valid dimension size.\n", k);
+        exit(errno);
+    }
 
     // Number of vertex:
     n_vertex = powl(k, n_dims);
@@ -34,6 +47,11 @@ void define_kary_ncube(k_ary_n_cube *cube)
     // Has rings? (is it a torus?)
     printf("Has rings? = ");
     scanf_buffer = scanf("%hhd", &has_rings);
+    if (has_rings > 1 || has_rings < 0)
+    {
+        fprintf(stderr, "Boolean error. Invalid true value.\n");
+        exit(errno);
+    }
 
     /* Allocate memory for the structure */
     cube->n = n_dims;
@@ -183,6 +201,12 @@ void free_kary_ncube(k_ary_n_cube **cube)
  */
 void define_routing_reg(RoutingReg *reg, unsigned long length)
 {
+    if (length <= 0)
+    {
+        fprintf(stderr, "Invalid register size.\n");
+        exit(errno);
+    }
+
     reg->length = length;
     reg->register_ = calloc(length, sizeof(long));
 }
@@ -207,6 +231,12 @@ void free_routing_reg(RoutingReg **reg)
  */
 void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 {
+    if (u_index * v_index <= 0)
+    {
+        fprintf(stderr, "Invalid index on routing.\n");
+        exit(errno);
+    }
+    
     // Take the vertices from the graph.
     Vertex *u, *v;
     u = cube->g->vertices[u_index];
@@ -233,6 +263,12 @@ void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 {
     long reg_val;
+
+    if (u_index * v_index <= 0)
+    {
+        fprintf(stderr, "Invalid index on routing.\n");
+        exit(errno);
+    }
 
     // Take the vertices from the graph.
     Vertex *u, *v;
@@ -274,6 +310,12 @@ void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
  */
 void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 {
+    if (u_index * v_index <= 0)
+    {
+        fprintf(stderr, "Invalid index on routing.\n");
+        exit(errno);
+    }
+
     // Take the vertices from the graph.
     Vertex *u, *v;
     u = cube->g->vertices[u_index];

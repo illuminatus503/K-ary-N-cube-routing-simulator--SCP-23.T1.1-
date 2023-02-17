@@ -1,5 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+
+extern int errno;
 
 #include "../include/graph.h"
 
@@ -47,6 +50,12 @@ void clone_vertex(Vertex *v, Vertex *u)
 
 void print_vertex(PartialGraph *g, unsigned long u_index)
 {
+    if (u_index < 0)
+    {
+        fprintf(stderr, "Negative vertex index: %ld is not a valid index.\n", u_index);
+        exit(errno);
+    }
+
     int coord_index;
     Vertex *v = g->vertices[u_index];
 
@@ -73,6 +82,18 @@ void define_graph(PartialGraph *g, unsigned long n_vertex, unsigned long n_dims)
 {
     unsigned long vertex_index;
 
+    if (n_vertex <= 0)
+    {
+        fprintf(stderr, "Negative vertex number: %ld is not a valid length.\n", n_vertex);
+        exit(errno);
+    }
+
+    if (n_dims <= 0)
+    {
+        fprintf(stderr, "Negative dimension: %ld is not valid.\n", n_dims);
+        exit(errno);
+    }
+
     // Define the number of vertex.
     g->n_vertex = n_vertex;
 
@@ -84,7 +105,6 @@ void define_graph(PartialGraph *g, unsigned long n_vertex, unsigned long n_dims)
         // Declare and init. each vertex.
         g->vertices[vertex_index] = (Vertex *)malloc(sizeof(Vertex));
         define_vertex(g->vertices[vertex_index], vertex_index, n_dims);
-        ;
     }
 }
 
