@@ -1,18 +1,25 @@
-CC=gcc
-CFLAGS=-O3 -I. -g -Wall
+CC = gcc
+CFLAGS = -g -Wall -O3
+
+OBJ_DIR = obj
+INCLUDE = -Iinclude
 LIBS=-lm
 
-OBJ_=main.o
-OBJ_DIR=obj
-OBJ=$(patsubst %,$(OBJ_DIR)/%,$(OBJ_))
+_OBJ= main.o graph.o topologies.o 
+OBJ = $(patsubst %,$(OBJ_DIR)/%,$(_OBJ))
 
-OUT_FILE=test
+SRC_DIR = src
+IN_FILE = main
+OUT_FILE = extra1
 
-$(OBJ_DIR)/%.o: %.c
-	$(CC) -c $< -o $@ $(CFLAGS) 
+$(OUT_FILE): $(OBJ) # Link all object files.
+	$(CC) -o $@ $^ $(INCLUDE) $(LIBS) 
 
-all: $(OBJ)
-	$(CC) $^ -o $(OUT_FILE) $(LIBS)
+$(OBJ_DIR)/$(IN_FILE).o: ./$(IN_FILE).c # Compile main.c
+	$(CC) $(CFLAGS) -c $<  -o $@ $(INCLUDE) $(LIBS) 
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c # Compile all header files.
+	$(CC) $(CFLAGS) -c $<  -o $@ $(INCLUDE) $(LIBS) 
 
 .PHONY: clean
 
