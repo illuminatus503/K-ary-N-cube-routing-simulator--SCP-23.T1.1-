@@ -22,7 +22,7 @@ struct Vertex
  */
 void define_vertex(Vertex *v, unsigned long n_dims)
 {
-    v->n_dims = n_dims;                                                      // Set the number of dimensions of the coordinates.
+    v->n_dims = n_dims;                                    // Set the number of dimensions of the coordinates.
     v->coordinates = (long *)calloc(n_dims, sizeof(long)); // Allocate space for coordinates.
 }
 
@@ -113,14 +113,25 @@ void define_routing_reg(RoutingReg *reg, unsigned long length)
     reg->register_ = calloc(length, sizeof(long));
 }
 
+/**
+ * @brief Free routing register.
+ *
+ * @param reg A pointer to a Routing register structure.
+ */
+void free_routing_reg(RoutingReg **reg)
+{
+    free((*reg)->register_);
+    free(*reg);
+}
+
 /* K-ary N-cube structure */
 struct k_ary_n_cube
 {
     Graph *g;
     bool has_rings;
-    uint n, k;
+    long n, k;
     RoutingReg *last_reg;
-    void (*routing_function)(Graph *, uint, uint, RoutingReg *); // The routing function
+    void (*routing_function)(struct k_ary_n_cube *, uint, uint); // The routing function
 } typedef k_ary_n_cube;
 
 /**
@@ -172,17 +183,17 @@ void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
     for (int coordinate_index = 0; coordinate_index < u->n_dims; coordinate_index++)
     {
         reg_val = v->coordinates[coordinate_index] - u->coordinates[coordinate_index];
-        
+
         // Correct the path if it is very long.
-        if (abs(reg_val) > (cube->k / 2)) 
+        if (abs(reg_val) > (cube->k / 2))
         {
             if (reg_val > 0)
             {
-                reg_val -= k;
+                reg_val -= cube->k;
             }
             else
             {
-                reg_val += k;
+                reg_val += cube->k;
             }
         }
 
@@ -217,18 +228,6 @@ void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 }
 
 /**
- * @brief Free routing register.
- *
- * @param reg A pointer to a Routing register structure.
- */
-void free_routing_reg(RoutingReg **reg)
-{
-    free((*reg)->register_);
-    free(*reg);
-}
-
-
-/**
  * @brief Define a k-ary n-cube graph.
  *  - Number of nodes: n^k (k nodes per dimension --n dims.--)
  *  - Digraph (Directed graph).
@@ -258,6 +257,8 @@ void define_kary_ncube(k_ary_n_cube *cube)
     scanf_buffer = scanf("%hhd", &has_rings);
 
     /* Allocate memory for the structure */
+    cube->n = n_dims;
+    cube->k = k;
     cube->g = (Graph *)malloc(sizeof(Graph));
     define_graph(cube->g, n_vertex, n_dims);
 
@@ -266,18 +267,20 @@ void define_kary_ncube(k_ary_n_cube *cube)
     define_routing_reg(cube->last_reg, n_dims);
 
     // Decide whether it's a hypercube (k == 2 and no rings)
-    // a torus (k > 2 and has rings) or a mesh (k > 2 and no rings).
+    // a torus (k >= 2 and has rings) or a mesh (k >= 2 and no rings).
     // Define the edges to be set and the *routing function*.
     printf("%d-ary %d-", k, n_dims);
     if ((k == 2) && !has_rings)
     {
         printf("hypercube");
+        cube->routing_function = &hypercube_routing_func;
     }
-    else if (k > 2)
+    else if (k >= 2)
     {
         if (has_rings)
         {
             printf("torus");
+            cube->routing_function = &torus_routing_func;
         }
         else
         {
