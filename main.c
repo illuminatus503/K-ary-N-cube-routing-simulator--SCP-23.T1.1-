@@ -10,6 +10,7 @@ typedef unsigned char bool;
 /* Vertex structure */
 struct Vertex
 {
+    unsigned long index;
     long *coordinates;
     unsigned long n_dims;
 } typedef Vertex;
@@ -20,8 +21,9 @@ struct Vertex
  * @param v The vertex to be defined.
  * @param n_dims The number of dimensions of the coordinates.
  */
-void define_vertex(Vertex *v, unsigned long n_dims)
+void define_vertex(Vertex *v, unsigned long index, unsigned long n_dims)
 {
+    v->index = index;                                      // Set the index of the vertex.
     v->n_dims = n_dims;                                    // Set the number of dimensions of the coordinates.
     v->coordinates = (long *)calloc(n_dims, sizeof(long)); // Allocate space for coordinates.
 }
@@ -56,7 +58,7 @@ struct Graph
  */
 void define_graph(Graph *g, uint n_vertex, uint n_dims)
 {
-    int vertex;
+    unsigned long vertex_index;
 
     // Define the number of vertex.
     g->n_vertex = n_vertex;
@@ -65,14 +67,14 @@ void define_graph(Graph *g, uint n_vertex, uint n_dims)
     // Allocate mem. and init. to 0 the adjacency matrix.
     g->vertices = (Vertex **)malloc(n_vertex * sizeof(Vertex *));
     g->edges = (uint **)malloc(n_vertex * sizeof(uint *));
-    for (vertex = 0; vertex < n_vertex; vertex++)
+    for (vertex_index = 0; vertex_index < n_vertex; vertex_index++)
     {
         // Declare and init. each vertex.
-        g->vertices[vertex] = (Vertex *)malloc(sizeof(Vertex));
-        define_vertex(g->vertices[vertex], n_dims);
+        g->vertices[vertex_index] = (Vertex *)malloc(sizeof(Vertex));
+        define_vertex(g->vertices[vertex_index], vertex_index, n_dims);
 
         // Allocate mem. for the adjacency matrix.
-        g->edges[vertex] = (uint *)calloc(n_vertex, sizeof(uint));
+        g->edges[vertex_index] = (uint *)calloc(n_vertex, sizeof(uint));
     }
 }
 
@@ -229,18 +231,18 @@ void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 
 /**
  * @brief Define a k-ary n-cube vertex coordinates.
- * Encode the coordinates of each vertex using the 
+ * Encode the coordinates of each vertex using the
  * features o the cube.
- * 
+ *
  * @param cube The cube to be defined.
  */
 void encode_coordinates(k_ary_n_cube *cube)
 {
     int index, vertex_index;
     unsigned long rest;
-    
+
     Vertex *v;
-    Vertex ** vertices = cube->g->vertices;
+    Vertex **vertices = cube->g->vertices;
     unsigned long n_dims = vertices[0]->n_dims;
     unsigned long n_vertex = cube->g->n_vertex;
 
@@ -252,12 +254,12 @@ void encode_coordinates(k_ary_n_cube *cube)
         v = vertices[vertex_index];
 
         // So, we will use binary decomposition.
-        index = n_dims-1;
+        index = n_dims - 1;
         rest = vertex_index;
         while ((index >= 0) && (rest >= 0))
         {
             // Division and modulus: 17 // 2 = 8; 17 % 2 = 1
-            v->coordinates[index] = rest % k; 
+            v->coordinates[index] = rest % k;
             rest /= k;
             index--;
         }
@@ -289,6 +291,42 @@ void encode_coordinates(k_ary_n_cube *cube)
 }
 
 /**
+ * @brief Clone a vertex.
+ *
+ * @param v Original copy.
+ * @param u New copy.
+ */
+void clone_vertex(Vertex *v, Vertex *u)
+{
+    u->index = v->index;
+    u->n_dims = v->n_dims;
+    for (int index = 0; index < v->n_dims; index++)
+    {
+        u->coordinates[index] = v->coordinates[index];
+    }
+}
+
+/**
+ * @brief Decode the coordinates of a vertex into an index.
+ *
+ * @param v The vertex to be decoded.
+ * @param basis
+ * @return unsigned long
+ */
+unsigned long decode_coordinates(Vertex *v, unsigned long basis)
+{
+    unsigned long index_from_coord = 0;
+    unsigned long pow_k = 1;
+    for (int index = v->n_dims - 1; index >= 0; index--)
+    {
+        index_from_coord += (pow_k * (v->coordinates[index]));
+        pow_k *= basis;
+    }
+    v->index = index_from_coord; // Save the new index into the vertex.
+    return index_from_coord;
+}
+
+/**
  * @brief Define a k-ary n-cube graph.
  *  - Number of nodes: n^k (k nodes per dimension --n dims.--)
  *  - Digraph (Directed graph).
@@ -297,18 +335,18 @@ void encode_coordinates(k_ary_n_cube *cube)
  */
 void define_kary_ncube(k_ary_n_cube *cube)
 {
-    uint n_dims, k, n_vertex;
+    unsigned long n_dims, k, n_vertex;
     bool has_rings;
 
-    uint scanf_buffer; // Output of scanf, to be saved.
+    unsigned char scanf_buffer; // Output of scanf, to be saved.
 
     // Define number of dimensions
     printf("n = ");
-    scanf_buffer = scanf("%d", &n_dims);
+    scanf_buffer = scanf("%ld", &n_dims);
 
     // Define the number k
     printf("k = ");
-    scanf_buffer = scanf("%d", &k);
+    scanf_buffer = scanf("%ld", &k);
 
     // Number of vertex:
     n_vertex = powl(k, n_dims);
@@ -333,7 +371,7 @@ void define_kary_ncube(k_ary_n_cube *cube)
     // Decide whether it's a hypercube (k == 2 and no rings)
     // a torus (k >= 2 and has rings) or a mesh (k >= 2 and no rings).
     // Define the edges to be set and the *routing function*.
-    printf("%d-ary %d-", k, n_dims);
+    printf("%ld-ary %ld-", k, n_dims);
     if ((k == 2) && !has_rings)
     {
         printf("hypercube");
@@ -352,7 +390,105 @@ void define_kary_ncube(k_ary_n_cube *cube)
             cube->routing_function = &mesh_routing_func;
         }
     }
-    printf(": %d nodes in total\n", n_vertex);
+    printf(": %ld nodes in total\n", n_vertex);
+}
+
+void print_vertex(Graph *g, uint u_index)
+{
+    int coord_index;
+    Vertex *v = g->vertices[u_index];
+
+    printf("%d [ ", u_index);
+    for (coord_index = 0; coord_index < v->n_dims; coord_index++)
+    {
+        printf("%ld ", v->coordinates[coord_index]);
+    }
+    printf("]");
+}
+
+/**
+ * @brief Routing from one vertex, to another.
+ *
+ * @param cube A K-ary N-cube.
+ * @param u_index The index of the source node.
+ * @param v_index The index of the destination node.
+ */
+void routing_from(k_ary_n_cube *cube, uint u_index, uint v_index)
+{
+    long coord_value, coord_index;
+    unsigned long distance, reg_length = cube->last_reg->length;
+
+    Vertex *u_clone;
+
+    // Represent which vertices are going to be source and destination.
+    printf("The package goes from ");
+    print_vertex(cube->g, u_index);
+    printf(" to ");
+    print_vertex(cube->g, v_index);
+    printf(".\n\n");
+
+    // Work out the routing register to go from one point to the other.
+    cube->routing_function(cube, u_index, v_index);
+
+    // Print the routing register and the distance between nodes.
+    printf(" ** Routing Register ** \n");
+    printf(" \t --> [ ");
+    distance = 0;
+    for (coord_index = 0; coord_index < reg_length; coord_index++)
+    {
+        coord_value = cube->last_reg->register_[coord_index];
+        distance += abs(coord_value);
+        printf("%ld ", coord_value);
+    }
+    printf("] <-- \n");
+    printf("Graph distance between nodes: %ld\n\n", distance);
+
+    // Clone origin vertex: later, we will modify the coordinates of the vertex.
+    u_clone = (Vertex *)malloc(sizeof(Vertex));
+    define_vertex(u_clone, 0, reg_length);
+    clone_vertex(cube->g->vertices[u_index], u_clone);
+
+    // Visualise the origin.
+    printf("( INDEX = %ld ) Step taken = [ ", u_clone->index);
+    for (int i = 0; i < reg_length; i++)
+        printf("%ld ", u_clone->coordinates[i]);
+    printf("]\n");
+
+    // Translate: from origin to target, sequentially.
+    // For visualization purposes.
+    for (coord_index = reg_length - 1; coord_index >= 0; coord_index--)
+    {
+        // Firstly, move from one coordinate from origin, to the
+        // other sequentially.
+        while (abs(cube->last_reg->register_[coord_index]) > 0)
+        {
+            if (cube->last_reg->register_[coord_index] > 0)
+            {
+                u_clone->coordinates[coord_index] = (u_clone->coordinates[coord_index] + 1) % cube->k;
+                cube->last_reg->register_[coord_index]--;
+            }
+            else if (cube->last_reg->register_[coord_index] < 0)
+            {
+                u_clone->coordinates[coord_index] = (u_clone->coordinates[coord_index] - 1) % cube->k;
+                if (u_clone->coordinates[coord_index] < 0) // For torus, equivalent coordinate in arithmetic
+                                                           // Modulo K
+                {
+                    u_clone->coordinates[coord_index] += cube->k;
+                }
+
+                cube->last_reg->register_[coord_index]++;
+            }
+
+            // Print on screen the next step taken
+            printf("( INDEX = %ld ) Step taken = [ ", decode_coordinates(u_clone, cube->k));
+            for (int i = 0; i < reg_length; i++)
+                printf("%ld ", u_clone->coordinates[i]);
+            printf("]\n");
+        }
+    }
+
+    // Lastly, free the auxiliary vertex u_clone.
+    free_vertex(&u_clone);
 }
 
 /**
@@ -370,10 +506,20 @@ void free_kary_ncube(k_ary_n_cube **cube)
 int main()
 {
     k_ary_n_cube *cube;
+    unsigned long u_index, v_index;
+    unsigned char scanf_buffer;
 
     // Initialise the k-ary n-cube
     cube = (k_ary_n_cube *)malloc(sizeof(k_ary_n_cube));
     define_kary_ncube(cube);
+
+    // Perform routing from one point to the other
+    printf("\nOrigin: ");
+    scanf_buffer = scanf("%ld", &u_index);
+    printf("Target: ");
+    scanf_buffer = scanf("%ld", &v_index);
+    printf("\n");
+    routing_from(cube, u_index, v_index);
 
     // Remove the k-ary n-cube
     free_kary_ncube(&cube);
