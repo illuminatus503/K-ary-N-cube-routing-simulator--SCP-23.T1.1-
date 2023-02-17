@@ -10,7 +10,7 @@ typedef unsigned char bool;
 /* Vertex structure */
 struct Vertex
 {
-    unsigned long *coordinates;
+    long *coordinates;
     unsigned long n_dims;
 } typedef Vertex;
 
@@ -23,7 +23,7 @@ struct Vertex
 void define_vertex(Vertex *v, unsigned long n_dims)
 {
     v->n_dims = n_dims;                                                      // Set the number of dimensions of the coordinates.
-    v->coordinates = (unsigned long *)calloc(n_dims, sizeof(unsigned long)); // Allocate space for coordinates.
+    v->coordinates = (long *)calloc(n_dims, sizeof(long)); // Allocate space for coordinates.
 }
 
 /**
@@ -113,27 +113,106 @@ void define_routing_reg(RoutingReg *reg, unsigned long length)
     reg->register_ = calloc(length, sizeof(long));
 }
 
+/* K-ary N-cube structure */
+struct k_ary_n_cube
+{
+    Graph *g;
+    bool has_rings;
+    uint n, k;
+    RoutingReg *last_reg;
+    void (*routing_function)(Graph *, uint, uint, RoutingReg *); // The routing function
+} typedef k_ary_n_cube;
+
 /**
  * @brief Routing function for n-dimensional mesh, with k-nodes per dim.
  *
- * @param u A vertex in
- * @param v
- * @param reg
+ * @param cube A k-ary n-cube
+ * @param u A vertex in the cube
+ * @param v Another vertex in the cube
  */
-void mesh_routing_func(Graph *g, uint u_index, uint v_index, RoutingReg *reg)
+void mesh_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
 {
     // Take the vertices from the graph.
     Vertex *u, *v;
-    u = g->vertices[u_index];
-    v = g->vertices[v_index];
+    u = cube->g->vertices[u_index];
+    v = cube->g->vertices[v_index];
 
-    // Initialise the routing register.
-    define_routing_reg(reg, u->n_dims);
+    // Routing register
+    RoutingReg *reg;
+    reg = cube->last_reg; // Se supone inicializado
 
     // Work out the steps to take in all dims of the mesh.
     for (int coordinate_index = 0; coordinate_index < u->n_dims; coordinate_index++)
     {
         reg->register_[coordinate_index] = v->coordinates[coordinate_index] - u->coordinates[coordinate_index];
+    }
+}
+
+/**
+ * @brief Routing function for n-dimensional torus, with k-nodes per dim.
+ *
+ * @param cube A k-ary n-cube
+ * @param u A vertex in the cube
+ * @param v Another vertex in the cube
+ */
+void torus_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
+{
+    long reg_val;
+
+    // Take the vertices from the graph.
+    Vertex *u, *v;
+    u = cube->g->vertices[u_index];
+    v = cube->g->vertices[v_index];
+
+    // Routing register
+    RoutingReg *reg;
+    reg = cube->last_reg; // Se supone inicializado
+
+    // Work out the steps to take in all dims of the mesh.
+    for (int coordinate_index = 0; coordinate_index < u->n_dims; coordinate_index++)
+    {
+        reg_val = v->coordinates[coordinate_index] - u->coordinates[coordinate_index];
+        
+        // Correct the path if it is very long.
+        if (abs(reg_val) > (cube->k / 2)) 
+        {
+            if (reg_val > 0)
+            {
+                reg_val -= k;
+            }
+            else
+            {
+                reg_val += k;
+            }
+        }
+
+        reg->register_[coordinate_index] = reg_val;
+    }
+}
+
+/**
+ * @brief Routing function for n-dimensional hypercube.
+ *
+ * @param cube A n-hypercube.
+ * @param u A vertex in the cube
+ * @param v Another vertex in the cube
+ */
+void hypercube_routing_func(k_ary_n_cube *cube, uint u_index, uint v_index)
+{
+    // Take the vertices from the graph.
+    Vertex *u, *v;
+    u = cube->g->vertices[u_index];
+    v = cube->g->vertices[v_index];
+
+    // Routing register
+    RoutingReg *reg;
+    reg = cube->last_reg; // Se supone inicializado
+
+    // Work out the steps to take in all dims of the mesh.
+    for (int coordinate_index = 0; coordinate_index < u->n_dims; coordinate_index++)
+    {
+        // In hex, 0 = 0b00000000 and 1 = 0b00000001. So, use bitwise XOR.
+        reg->register_[coordinate_index] = (v->coordinates[coordinate_index]) ^ (u->coordinates[coordinate_index]);
     }
 }
 
@@ -148,15 +227,6 @@ void free_routing_reg(RoutingReg **reg)
     free(*reg);
 }
 
-/* K-ary N-cube structure */
-struct k_ary_n_cube
-{
-    Graph *g;
-    bool has_rings;
-    uint n, k;
-    RoutingReg *last_reg;
-    void (*routing_function)(Graph *, RoutingReg *);
-} typedef k_ary_n_cube;
 
 /**
  * @brief Define a k-ary n-cube graph.
@@ -206,9 +276,14 @@ void define_kary_ncube(k_ary_n_cube *cube)
     else if (k > 2)
     {
         if (has_rings)
+        {
             printf("torus");
+        }
         else
+        {
             printf("mesh");
+            cube->routing_function = &mesh_routing_func;
+        }
     }
     printf(": %d nodes in total\n", n_vertex);
 }
